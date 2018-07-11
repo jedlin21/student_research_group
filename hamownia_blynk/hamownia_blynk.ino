@@ -8,6 +8,9 @@
 #include <Adafruit_ADS1015.h>
 #include "Timer.h"
 
+//Experoment time [s]
+int tests_time = 30
+
 // Your WiFi credentials.
 // Set password to "" for open networks.
 char ssid[] = "LG K8 LTE";
@@ -17,6 +20,7 @@ char auth[] = "c0a680cfe8dc4738b56369ba1e4753a6";
 //SD CARD
 #define SD_CARD_CD_DIO D8
 File SDFileData;
+File SD_thrust;
 
 
 
@@ -99,21 +103,40 @@ BLYNK_WRITE(V1)
   }
 
   /* Check if the text file already exists */
-   while(SD.exists("test.txt"))
+   while(SD.exists("pressure.txt"))
    {
      /* If so then delete it */
      terminal.println("test.txt already exists...DELETING");
-     SD.remove("test.txt");
+     SD.remove("pressure.txt");
+   }
+   while(SD.exists("thrust.txt"))
+   {
+     /* If so then delete it */
+     terminal.println("test.txt already exists...DELETING");
+     SD.remove("thrust.txt");
    }
 
    /* Create a new text file on the microSD card */
   terminal.println("Creating test.txt");
-  SDFileData = SD.open("test.txt", FILE_WRITE);
+  SDFileData = SD.open("pressure.txt", FILE_WRITE);
+  SD_thrust = SD.open("thrust.txt", FILE_WRITE);
 
   /* If the file was created ok then add come content */
   if (SDFileData)
   {
-    SDFileData.println("It worked !!!");
+    SDFileData.println("The file pressure.txt was created");
+  
+    /* Close the file */
+    SDFileData.close();   
+    
+    terminal.println("done.");
+  }else
+  {
+      terminal.println("Error writing to file !");
+  }
+  if (SD_thrust)
+  {
+    SD_thrust.println("The file thrust.txt was created");
   
     /* Close the file */
     SDFileData.close();   
@@ -124,7 +147,8 @@ BLYNK_WRITE(V1)
       terminal.println("Error writing to file !");
   }
   
-  SDFileData = SD.open("test.txt", FILE_WRITE);
+  SDFileData = SD.open("pressure.txt", FILE_WRITE);
+  SDFileData = SD.open("thrust.txt", FILE_WRITE);
   Blynk.virtualWrite(V2, 2);
 
 }
@@ -174,20 +198,17 @@ void loop()
     time_k = millis() - start_time;
     SDFileData.println(time_k, DEC);
     i_weight = ads.readADC_SingleEnded(1);
-    SDFileData.println(i_weight, DEC);
+    SD_thrust.print(i_weight, DEC);
     time_k = millis() - start_time;
-    SDFileData.println(time_k, DEC);
+    SD_thrust.print(";");
+    SD_thrust.println(time_k, DEC);
+    i_weight++;
     
     if(i_weight == 4999){
       terminal.println("Done");
       /*We send data to SD here.
       We can also send some plotable data to Blynk*/
-      terminal.println( i_weight);
-      terminal.println( pressure[i_pressure][0]);
-      terminal.println( weight[i_weight][0]);
-      terminal.println( "; ");
-      terminal.println( pressure[i_pressure][1]);
-      terminal.println( weight[i_weight][1]);
+      terminal.println("The test is over");
       launch = false;
       password_verification = false; 
       launch = false;
